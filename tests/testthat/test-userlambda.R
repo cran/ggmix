@@ -1,15 +1,15 @@
-# test predict methods
+# test use defined lambda which is based on predict methods test
 
-context(strwrap("check predict and coef methods"))
+context(strwrap("check user defined lambda"))
 
 data("admixed")
 
 test_that("Check predict and coef methods with multiple s values", {
   skip_on_cran()
   fit <- ggmix(x = admixed$xtrain, y = admixed$ytrain, kinship = admixed$kin_train,
-               estimation = "full")
+               estimation = "full", lambda = c(0.235, 0.55, 0.19, 0.25, 0.00235, 0.00003))
   gicfit <- gic(fit)
-
+  
   expect_error(predict(gicfit), regexp = "You need to supply a value for")
   expect_length(drop(predict(gicfit, newx = admixed$xtest)), length(admixed$ytest))
   expect_equal(dim(predict(gicfit, newx = admixed$xtest, s = c(0.1,0.2))),

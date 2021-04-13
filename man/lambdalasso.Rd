@@ -19,8 +19,8 @@ lambdalasso(ggmix_object, ...)
   tol.kkt = 1e-09,
   eta_init = 0.5,
   nlambda = 100,
-  scale_x = F,
-  center_y = F
+  scale_x = FALSE,
+  center_y = FALSE
 )
 }
 \arguments{
@@ -46,7 +46,7 @@ nobs < nvars case.}
 \item{epsilon}{Convergence threshold for block relaxation of the entire
 parameter vector \eqn{\Theta = ( \beta, \eta, \sigma^2 )}. The algorithm
 converges when \deqn{crossprod(\Theta_{j+1} - \Theta_{j}) < \epsilon}.
-Defaults value is 1E-7}
+Defaults value is 1E-4}
 
 \item{tol.kkt}{KKT tolerance. Currently ignored}
 

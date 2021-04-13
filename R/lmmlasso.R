@@ -43,25 +43,44 @@ lmmlasso.fullrank <- function(ggmix_object,
 
   # get lambda sequence -----------------------------------------------------
 
-  lamb <- lambdalasso(ggmix_object,
-    penalty.factor = penalty.factor,
-    nlambda = nlambda,
-    lambda_min_ratio = lambda_min_ratio,
-    eta_init = eta_init,
-    epsilon = epsilon
-  )
+  if (is.null(lambda)) {
+    
+    if (lambda_min_ratio >= 1) stop("lambda_min_ratio should be less than 1")
+    
+    lamb <- lambdalasso(ggmix_object,
+                        penalty.factor = penalty.factor,
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        eta_init = eta_init,
+                        epsilon = epsilon
+    )
+    
+    lambda_max <- lamb$sequence[[1]]
+    lamb$sequence[[1]] <- .Machine$double.xmax
+    
+    tuning_params_mat <- matrix(lamb$sequence, nrow = 1, ncol = nlambda, byrow = TRUE)
+    dimnames(tuning_params_mat)[[1]] <- list("lambda")
+    dimnames(tuning_params_mat)[[2]] <- paste0("s", seq_len(nlambda))
+    lambda_names <- dimnames(tuning_params_mat)[[2]]
+    
+  } else {
+    
+    if (any(lambda < 0)) stop("lambdas should be non-negative")
+    nlambda <- length(lambda)
+    lambda <- as.double(rev(sort(lambda)))
+    lambda_max <- lambda[[1]]
+    
+    tuning_params_mat <- matrix(lambda, nrow = 1, ncol = nlambda, byrow = TRUE)
+    dimnames(tuning_params_mat)[[1]] <- list("lambda")
+    dimnames(tuning_params_mat)[[2]] <- paste0("s", seq_len(nlambda))
+    lambda_names <- dimnames(tuning_params_mat)[[2]]
+  }
 
-  lambda_max <- lamb$sequence[[1]]
 
-  lamb$sequence[[1]] <- .Machine$double.xmax
+
 
 
   # create matrix to store results ------------------------------------------
-
-  tuning_params_mat <- matrix(lamb$sequence, nrow = 1, ncol = nlambda, byrow = T)
-  dimnames(tuning_params_mat)[[1]] <- list("lambda")
-  dimnames(tuning_params_mat)[[2]] <- paste0("s", seq_len(nlambda))
-  lambda_names <- dimnames(tuning_params_mat)[[2]]
 
   coefficient_mat <- matrix(
     nrow = p_design + 3,
@@ -279,7 +298,7 @@ lmmlasso.fullrank <- function(ggmix_object,
     n_design = n_design, # used by gic function
     p_design = p_design, # used by gic function
     lambda = out_print[, "Lambda"], # used by gic, predict functions
-    coef = methods::as(coefficient_mat[, lambdas_fit, drop = F], "dgCMatrix"), #first row is intercept, last two rows are eta and sigma2
+    coef = methods::as(coefficient_mat[, lambdas_fit, drop = FALSE], "dgCMatrix"), #first row is intercept, last two rows are eta and sigma2
     b0 = coefficient_mat["(Intercept)", lambdas_fit], # used by predict function
     beta = methods::as(coefficient_mat[colnames(ggmix_object[["x"]])[-1],
       lambdas_fit,
